@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# A very simple script to convert a JSON file obtained from the Network Map to a CSV file
+# This script accepts an input either from the stdin or as a command line argument
+#
+# The CVS is send to the stdout
+#
+# Examples:
+#   cat node-infos.json | node-infos-to-csv
+#   node-infos-to-csv node-infos.json
+#
+# Please note: this script depends on `jq` for JSON parsing
+set -eu
+
+# a JQ filter to flatten the JSON produced by the Network Map
+JQ_FLATTEN_FILTER='
+.[] | {
+  Serial,
+  "Platform Version",
+  "Legal Indentities": (
+      ."Legal Identities" | join(", ")
+  ),
+  "address": (
+    [.addresses[] | [.host, .port | tostring] | join(":")] | join(", ")
+  )
+}
+'
+
+# a JQ filter to convert flattened JSON to CSV
+JQ_CSV_FILTER='
+(.[0] | to_entries | [.[].key]),
+(.[] | to_entries  | [.[].value]) | @csv
+'
+
+# Flatten, slurp and convert to CSV (with a header in the first line)
+jq "${JQ_FLATTEN_FILTER}" ${1+"$@"} | jq --slurp '.' | jq -r "${JQ_CSV_FILTER}"
