@@ -17,9 +17,9 @@ JQ_FLATTEN_FILTER='
   Serial,
   "Platform Version",
   "Legal Indentities": (
-      ."Legal Identities" | join(", ")
+      ."Legal Identities" | join("; ")
   ),
-  "address": (
+  "Addresses": (
     [.addresses[] | [.host, .port | tostring] | join(":")] | join(", ")
   )
 }
